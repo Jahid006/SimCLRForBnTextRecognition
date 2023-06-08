@@ -7,7 +7,7 @@ import torch.backends.cudnn as cudnn
 from my_dataset.contrastive_learning_dataset import ContrastiveLearningDataset
 from my_dataset.augmentation import NoiseAugment
 from simclr import SimCLR
-from models.resnet_simclr import ImageEmbedding, FeatureExtractor
+from models.model import ImageEmbedding, FeatureExtractor
 from data_utils import DataSourceController
 from config import TrainingConfig, train_source
 
