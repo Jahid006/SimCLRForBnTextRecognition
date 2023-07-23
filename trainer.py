@@ -5,11 +5,11 @@ import torch
 import torch.backends.cudnn as cudnn
 
 from my_dataset.contrastive_learning_dataset import ContrastiveLearningDataset
-from my_dataset.augmentation import NoiseAugment
+from my_dataset.augmentation import Augmentation
 from simclr import SimCLR
 from models.model import ImageEmbedding, FeatureExtractor
-from data_utils import DataSourceController
-from config import TrainingConfig, train_source
+from my_dataset import data_utils, dataconfig
+from config import TrainingConfig
 
 
 parser = argparse.ArgumentParser(description="PyTorch SimCLR")
@@ -94,8 +94,8 @@ def enable_gpu(args):
         args.gpu_index = -1
 
 
-def get_data(train_source):
-    data = DataSourceController(
+def get_data(train_sources):
+    data = data_utils.DataSourceController(
         filter_=lambda x: len(x.label) < 30,
         transform=lambda x: x.replace("\u200c", "")
     )
@@ -104,8 +104,9 @@ def get_data(train_source):
         "boise_scan_train",
         "boise_conjunct_train",
         "bn_htr_train",
+        "bangla_writting_train"
     ]:
-        data.add_data(**train_source[k])
+        data.add_data(**train_sources[k])
 
     unique_texts = defaultdict(list)
     for _data in data.data:
@@ -122,8 +123,10 @@ def main():
     pprint(args)
     enable_gpu(args)
 
-    data = get_data(train_source)
-    train_dataset = ContrastiveLearningDataset(data, noiseAugment=NoiseAugment(1))
+    data = get_data(dataconfig.train_sources)
+    train_dataset = ContrastiveLearningDataset(
+        data, noiseAugment=Augmentation(.99)
+    )
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=args.batch_size,
@@ -132,8 +135,17 @@ def main():
         pin_memory=False,
         drop_last=True,
     )
+    training_config = TrainingConfig()
+    print(training_config.__dict__)
 
-    feature_extractor = FeatureExtractor(TrainingConfig.__dict__())
+    training_config = {
+        key: value for key, value in training_config.__dict__.items()
+        # if not key.startswith('__') and not callable(key)
+    }
+
+    
+
+    feature_extractor = FeatureExtractor(training_config)
     model = ImageEmbedding(FeatureExtractor=feature_extractor)
 
     optimizer = torch.optim.Adam(
@@ -157,7 +169,6 @@ def main():
             args=args,
             log_dir=TrainingConfig.log_dir,
         )
-
         simclr.train(train_loader)
 
 

@@ -21,22 +21,21 @@ class Example:
         return [view.path for view in views]
 
     def __repr__(self) -> str:
-        return f"{self.text}: " + "\n".join(
-            [f"{bucket}: {len(data)}" for bucket, data in self.buckets.items()]
-        )
+        return f"{self.text}: " + "\n".join([
+            f"{bucket}: {len(data)}"
+            for bucket, data in self.buckets.items()
+        ])
 
 
 class ContrastiveLearningDataset(Dataset):
     def __init__(
         self,
         data,
-        # data_bucket,
         img_height=32,
         img_width=128,
         noiseAugment=None,
     ):
         self.data = data
-        # self.data_bucket = data_bucket
         self.img_height = img_height
         self.img_width = img_width
         self.noiseAugment = noiseAugment
@@ -48,12 +47,12 @@ class ContrastiveLearningDataset(Dataset):
 
     def __getitem__(self, index):
         try:
-            _data = self.data[index]
-            views = [_data.path] * 2
+            example = self.data[index]
+            views = [example.path] * 2
             probability = 1 if views[0] == views[1] else self.probability
             return [self.get_image(v, probability) for v in views]
         except Exception as e:
-            print(_data.path)
+            print(e, example.path)
             return self[index + 1]
 
     def get_image(self, path, probability=None):
@@ -63,8 +62,8 @@ class ContrastiveLearningDataset(Dataset):
             image = np.array(image)
             image = self.noiseAugment(image, probability=probability)
             image = Image.fromarray(image.astype(np.uint8))
-        image = self.paste_image(image.copy(), self.canvas.copy())
 
+        image = self.paste_image(image.copy(), self.canvas.copy())
         image = np.array(image)
         image = np.expand_dims(image, axis=0)
         image = (image / 127.5) - 1.0
