@@ -9,7 +9,7 @@ from my_dataset.augmentation import Augmentation
 from simclr import SimCLR
 from models.model import ImageEmbedding, FeatureExtractor
 from my_dataset import data_utils, dataconfig
-from config import TrainingConfig
+from config import TrainingConfig, train_config
 
 
 parser = argparse.ArgumentParser(description="PyTorch SimCLR")
@@ -135,17 +135,8 @@ def main():
         pin_memory=False,
         drop_last=True,
     )
-    training_config = TrainingConfig()
-    print(training_config.__dict__)
 
-    training_config = {
-        key: value for key, value in training_config.__dict__.items()
-        # if not key.startswith('__') and not callable(key)
-    }
-
-    
-
-    feature_extractor = FeatureExtractor(training_config)
+    feature_extractor = FeatureExtractor(train_config)
     model = ImageEmbedding(FeatureExtractor=feature_extractor)
 
     optimizer = torch.optim.Adam(
@@ -167,7 +158,7 @@ def main():
             optimizer=optimizer,
             scheduler=scheduler,
             args=args,
-            log_dir=TrainingConfig.log_dir,
+            log_dir=train_config['log_dir'],
         )
         simclr.train(train_loader)
 

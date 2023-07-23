@@ -19,8 +19,8 @@ class TrainingConfig():
     max_pooling = [(2, 1), (2, 1), (0, 0), (2, 1), (0, 0), (0, 0), (2, 1), (0, 0)]
 
 
-training_config = {
-    key: value for key, value in TrainingConfig().__dict__.items()
+train_config = {
+    key: value for key, value in TrainingConfig.__dict__.items()
     if not key.startswith('__') and not callable(key)
 }
-print(TrainingConfig().__dict__)
+print(train_config)

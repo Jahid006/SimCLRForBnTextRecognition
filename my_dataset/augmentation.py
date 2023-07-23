@@ -40,7 +40,8 @@ class Augmentation(object):
             )
         ]
 
-    def __call__(self, image: np.ndarray):
+    def __call__(self, image: np.ndarray, probability: float = .5):
+        
         try:
             function = getattr(self, random.choice(self.level2_augmentation))
             if np.random.rand() < self.probability:

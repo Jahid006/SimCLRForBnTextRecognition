@@ -108,7 +108,6 @@ class SimCLR(object):
                 save_checkpoint(
                     {
                         "epoch": epoch_counter,
-                        "arch": self.args.arch,
                         "state_dict": self.model.state_dict(),
                         "optimizer": self.optimizer.state_dict(),
                     },
@@ -122,7 +121,6 @@ class SimCLR(object):
         save_checkpoint(
             {
                 "epoch": self.args.epochs,
-                "arch": self.args.arch,
                 "state_dict": self.model.state_dict(),
                 "optimizer": self.optimizer.state_dict(),
             },
