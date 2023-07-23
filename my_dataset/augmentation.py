@@ -1,94 +1,100 @@
 import random
-import cv2
 import numpy as np
 import skimage
-from . import warp_augment
+import albumentations as A
 
 
-# todo: incorporate straug
-# import straug
-
-
-# Credit goes to:
 # https://theai.codes/computer-vision/a-list-of-the-most-useful-opencv-filters/
 # https://gist.github.com/Prasad9/28f6a2df8e8d463c6ddd040f4f6a028a?permalink_comment_id=2933012#gistcomment-2933012
+# You could use straug and Albamunations too
 
 
-def format(function):
+def normalizer(function):
     def inner(*args, **kwargs):
         kwargs["image"] = kwargs["image"] / 255.0
         output = function(*args, **kwargs)
         return output * 255.0
-
     return inner
 
 
-class NoiseAugment:
-    def __init__(self, probability=0.2):
-        self.probability = probability
-
-    def __call__(self, image: np.ndarray, probability=None):
-        probability = self.probability if probability is None else probability
-        method_list = [
+class Augmentation(object):
+    def __init__(self, proablility=0.2):
+        self.probability = proablility
+        self.level1_augmentation = [
             func
             for func in dir(self)
-            if callable(getattr(self, func)) and not func.startswith("__")
+            if (
+                callable(getattr(self, func))
+                and not func.startswith("__")
+                and func.startswith("l1")
+            )
         ]
-        if np.random.rand() < probability:
-            return getattr(self, random.choice(method_list))(image=image)
+
+        self.level2_augmentation = [
+            func
+            for func in dir(self)
+            if (
+                callable(getattr(self, func))
+                and not func.startswith("__")
+                and func.startswith("l2")
+            )
+        ]
+
+    def __call__(self, image: np.ndarray):
+        try:
+            function = getattr(self, random.choice(self.level2_augmentation))
+            if np.random.rand() < self.probability:
+                image = function(image=image)
+            function = getattr(self, random.choice(self.level1_augmentation))
+            if np.random.rand() < self.probability:
+                image = function(image=image)
+        except Exception as e:
+            print(f"Exception: {e} @{function}")
 
         return image
+    
+    def l2_piecewise_affine(self, image=None):
+        return A.PiecewiseAffine(p=1.0)(image=image)["image"]
 
-    def skip_noise(self, image=None):
-        return image
+    def l2_rotate(self, image=None):
+        return A.Rotate(7, p=1.0)(image=image)["image"]
 
-    def otsu_binarization(self, image=None):
-        if len(image.shape) == 3:
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-        otsu_threshold, image_result = cv2.threshold(
-            image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
-        )
-        return image_result
+    def l2_grid_distortion(self, image=None):
+        return A.GridDistortion(p=1.0)(image=image)["image"]
 
-    def inverse_binarization(self, image=None):
-        image = self.otsu_binarization(image=image)
+    def l2_optical_distortion(self, image=None):
+        return A.OpticalDistortion(p=1.0)(image=image)["image"]
+
+    def l1_inverse(self, image=None):
         return 255 - image
 
-    def perspective(self, image=None):
-        return warp_augment.perspective(image)
+    def l1_skip_noise(self, image=None):
+        return image
 
-    @format
-    def gaussian(self, image=None):
+    @normalizer
+    def l1_gaussian(self, image=None):
         return skimage.util.random_noise(image, mode="gaussian", clip=True)
 
-    @format
-    def localvar(self, image=None):
+    @normalizer
+    def l1_localvar(self, image=None):
         return skimage.util.random_noise(image, mode="localvar")
 
-    @format
-    def poisson(self, image=None):
+    @normalizer
+    def l1_poisson(self, image=None):
         return skimage.util.random_noise(image, mode="poisson", clip=True)
 
-    @format
-    def salt(self, image=None):
+    @normalizer
+    def l1_salt(self, image=None):
         return skimage.util.random_noise(image, mode="salt")
 
-    @format
-    def pepper(self, image=None):
+    @normalizer
+    def l1_pepper(self, image=None):
         return skimage.util.random_noise(image, mode="pepper")
 
-    @format
-    def s_p(self, image=None):
+    @normalizer
+    def l1_s_p(self, image=None):
         return skimage.util.random_noise(image, mode="s&p")
 
-    @format
-    def speckle(self, image=None):
+    @normalizer
+    def l1_speckle(self, image=None):
         return skimage.util.random_noise(image, mode="speckle", clip=True)
-    
-    # def distort(self, image=None):
-    #     segment = np.random.randint(1, 4)
-    #     return warp_augment.distort(image, segment)
-
-    # def stretch(self, image=None):
-    #     segment = np.random.randint(1, 4)
-    #     return warp_augment.stretch(image, segment)
