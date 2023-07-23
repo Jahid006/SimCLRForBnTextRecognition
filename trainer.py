@@ -6,7 +6,7 @@ import torch.backends.cudnn as cudnn
 
 from my_dataset.contrastive_learning_dataset import ContrastiveLearningDataset
 from my_dataset.augmentation import Augmentation
-from simclr import SimCLR
+from models.simclr import SimCLR
 from models.model import ImageEmbedding, FeatureExtractor
 from my_dataset import data_utils, dataconfig
 from config import TrainingConfig, train_config
