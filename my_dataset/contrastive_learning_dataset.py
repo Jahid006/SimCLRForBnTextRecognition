@@ -86,12 +86,3 @@ class ContrastiveLearningDataset(Dataset):
             image.resize((cw, ch))
             canvas = image
         return canvas
-
-    # def __getitem__(self, index):
-    #     _data = self.data[index]
-    #     views = (
-    #         [random.choice(self.data_bucket[_data]).path]
-    #         + [random.choice(self.data_bucket[_data]).path]
-    #     )
-    #     probability = 1 if views[0] == views[1] else self.probability
-    #     return [self.get_image(v, probability) for v in views]
