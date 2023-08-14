@@ -66,9 +66,6 @@ class Augmentation(object):
     def l2_optical_distortion(self, image=None):
         return A.OpticalDistortion(p=1.0)(image=image)["image"]
 
-    def l1_inverse(self, image=None):
-        return 255 - image
-
     def l1_skip_noise(self, image=None):
         return image
 
